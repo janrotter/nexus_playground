@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-NEXUS_CONTAINER_NAME="${1:-nexus}"
+NEXUS_CONTAINER_NAME="${NEXUS_CONTAINER_NAME:-nexus}"
 
 echo "Removing Nexus container: ${NEXUS_CONTAINER_NAME}"
 
