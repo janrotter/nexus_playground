@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-NEXUS_URL="http://localhost:8081"
+NEXUS_URL="${NEXUS_URL:-http://localhost:8081}"
 
 check_writable() {
   curl -X 'GET' \

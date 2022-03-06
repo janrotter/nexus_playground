@@ -69,9 +69,13 @@ Vagrant.configure("2") do |config|
 
   config.vm.provision "nexus", type: "shell", inline: <<-SHELL
     cd /vagrant/nexus
+    export NEXUS_IMAGE_NAME="nexus_playground"
+    export NEXUS_CONTAINER_NAME="nexus"
+    export NEXUS_ADMIN_PASSWORD="admin"
+    export NEXUS_URL="http://localhost:8081"
     ./build_docker_image.sh
     ./remove_nexus_container.sh || true
-    ./launch_nexus_container.sh nexus_playground nexus -p 8081:8081
+    EXTRA_DOCKER_ARGS="-p 8081:8081" ./launch_nexus_container.sh
     ./wait_for_writable.sh
     ./set_unsecure_but_friendly_admin_pass.sh
     ./disable_anonymous_access.sh

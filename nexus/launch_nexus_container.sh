@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 
-NEXUS_IMAGE_NAME="${1:-nexus_playground}"
-NEXUS_CONTAINER_NAME="${2:-nexus}"
-ADDITIONAL_FLAGS="${*:3}"
+NEXUS_IMAGE_NAME="${NEXUS_IMAGE_NAME:-nexus_playground}"
+NEXUS_CONTAINER_NAME="${NEXUS_CONTAINER_NAME:-nexus}"
+EXTRA_DOCKER_ARGS="${EXTRA_DOCKER_ARGS}"
 
 
-CMD="docker run ${ADDITIONAL_FLAGS} --rm --detach --name ${NEXUS_CONTAINER_NAME} ${NEXUS_IMAGE_NAME}"
+CMD="docker run ${EXTRA_DOCKER_ARGS} --rm --detach --name ${NEXUS_CONTAINER_NAME} ${NEXUS_IMAGE_NAME}"
 echo "Launching Nexus container with: $CMD"
 $CMD
-
