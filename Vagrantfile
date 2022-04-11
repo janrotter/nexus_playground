@@ -63,7 +63,7 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: <<-SHELL
     export DEBIAN_FRONTEND=noninteractive
     apt-get --quiet update
-    apt-get --quiet --assume-yes install docker.io
+    apt-get --quiet --assume-yes install docker.io jq
     adduser vagrant docker
   SHELL
 
@@ -79,5 +79,36 @@ Vagrant.configure("2") do |config|
     ./wait_for_writable.sh
     ./set_unsecure_but_friendly_admin_pass.sh
     ./disable_anonymous_access.sh
+  SHELL
+  config.vm.provision "npm_install_performance", type: "shell", run: "never", inline: <<-SHELL
+    cd /vagrant/nexus
+    echo "Adding 10k users"
+    export NEXUS_ADMIN_PASSWORD="admin"
+    export NEXUS_URL="http://localhost:8081"
+    CUSTOM_SCRIPT_FILE_PATH="test_scenarios/npm_users_performance/create_users_and_repo.groovy" ./run_groovy_script.sh
+
+    echo "5 test installs of a sample npm package" 
+    for n in $(seq 1 5); do
+      ./test_scenarios/npm_users_performance/test_npm_install.sh
+    done
+  SHELL
+  config.vm.provision "npm_token_creation_performance_fix", type: "shell", run: "never", inline: <<-SHELL
+    cd /vagrant/nexus
+    echo "Adding an index to speed up creating npm tokens"
+    docker stop nexus
+    docker ps
+    docker run --volumes-from nexus sonatype/nexus3:3.38.0 bash -c "java -jar /opt/sonatype/nexus/lib/support/nexus-orient-console.jar 'connect plocal:/nexus-data/db/security admin admin; create index api_key_primary_principal on api_key (primary_principal) notunique'"
+    docker start nexus
+    ./wait_for_writable.sh
+  SHELL
+  config.vm.provision "npm_token_creation_performance", type: "shell", run: "never", inline: <<-SHELL
+    cd /vagrant/nexus
+    echo "Adding 10k users"
+    export NEXUS_ADMIN_PASSWORD="admin"
+    export NEXUS_URL="http://localhost:8081"
+    CUSTOM_SCRIPT_FILE_PATH="test_scenarios/npm_users_performance/create_users_and_repo.groovy" ./run_groovy_script.sh
+
+    echo "Creating npm tokens for 5k users"
+    ./test_scenarios/npm_users_performance/create_npm_tokens.sh
   SHELL
 end
