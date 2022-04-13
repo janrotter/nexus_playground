@@ -51,7 +51,7 @@ Vagrant.configure("2") do |config|
   #
   config.vm.provider "virtualbox" do |vb|
     # Customize the amount of memory on the VM:
-    vb.memory = "4096"
+    vb.memory = "6144"
   end
   #
   # View the documentation for the provider you are using for more
@@ -75,7 +75,7 @@ Vagrant.configure("2") do |config|
     export NEXUS_URL="http://localhost:8081"
     ./build_docker_image.sh
     ./remove_nexus_container.sh || true
-    EXTRA_DOCKER_ARGS="-p 8081:8081" ./launch_nexus_container.sh
+    EXTRA_DOCKER_ARGS="-p 8081:8081 -p 7000-7100:7000-7100" ./launch_nexus_container.sh
     ./wait_for_writable.sh
     ./set_unsecure_but_friendly_admin_pass.sh
     ./disable_anonymous_access.sh
@@ -110,5 +110,19 @@ Vagrant.configure("2") do |config|
 
     echo "Creating npm tokens for 5k users"
     ./test_scenarios/npm_users_performance/create_npm_tokens.sh
+  SHELL
+  config.vm.provision "docker_repos_separate_blobstores", type: "shell", run: "never", inline: <<-SHELL
+    cd /vagrant/nexus
+    export NEXUS_ADMIN_PASSWORD="admin"
+    export NEXUS_URL="http://localhost:8081"
+    CUSTOM_SCRIPT_FILE_PATH="test_scenarios/docker_repos_separate_blobstores/setup_repos.groovy" ./run_groovy_script.sh
+
+    docker pull alpine:3
+    docker login --username admin --password admin localhost:7000
+    docker tag alpine:3 localhost:7000/alpine:3
+    docker push localhost:7000/alpine:3
+    docker login --username admin --password admin localhost:7001
+    docker tag alpine:3 localhost:7001/alpine:3
+    docker push localhost:7001/alpine:3
   SHELL
 end
