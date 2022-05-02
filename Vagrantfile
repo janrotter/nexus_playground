@@ -28,11 +28,10 @@ Vagrant.configure("2") do |config|
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine and only allow access
   # via 127.0.0.1 to disable public access
-  config.vm.network "forwarded_port", guest: 8081, host: 8080, host_ip: "127.0.0.1"
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
-  # config.vm.network "private_network", ip: "192.168.33.10"
+  config.vm.network "private_network", ip: "192.168.56.10"
 
   # Create a public network, which generally matched to bridged network.
   # Bridged networks make the machine appear as another physical device on
@@ -124,5 +123,18 @@ Vagrant.configure("2") do |config|
     docker login --username admin --password admin localhost:7001
     docker tag alpine:3 localhost:7001/alpine:3
     docker push localhost:7001/alpine:3
+  SHELL
+  config.vm.provision "bloblo", type: "shell", run: "never", inline: <<-SHELL
+    # A test scenario for https://github.com/janrotter/bloblo
+    cd /vagrant/nexus
+    export NEXUS_ADMIN_PASSWORD="admin"
+    export NEXUS_URL="http://localhost:8081"
+    ./enable_anonymous_access.sh
+    CUSTOM_SCRIPT_FILE_PATH="test_scenarios/bloblo/setup_repos.groovy" ./run_groovy_script.sh
+
+    docker pull alpine:3
+    docker login --username admin --password admin localhost:7000
+    docker tag alpine:3 localhost:7000/alpine:3
+    docker push localhost:7000/alpine:3
   SHELL
 end
